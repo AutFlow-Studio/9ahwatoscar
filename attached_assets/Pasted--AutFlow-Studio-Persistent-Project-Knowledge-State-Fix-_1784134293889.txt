@@ -1,0 +1,110 @@
+# AutFlow Studio – Persistent Project Knowledge & State Fix
+
+You are responsible for fixing the project memory/state persistence issue.
+
+The project currently behaves differently depending on the Replit Agent session. Information remembered inside one Replit session is lost when opening another window or accessing the project from another environment.
+
+This is not acceptable. The project must have a persistent source of truth inside the application itself.
+
+## Requirements
+
+1. Create a persistent project documentation/state system inside the repository.
+
+Create a dedicated file such as:
+
+* PROJECT_CONTEXT.md
+  or
+* SYSTEM_CONTEXT.md
+
+This file should contain:
+
+* application purpose
+* architecture overview
+* technology stack
+* database structure
+* implemented features
+* important business logic
+* authentication setup
+* completed fixes
+* known limitations
+* future development notes
+
+This file must be updated whenever important project changes are made.
+
+---
+
+2. Ensure the application state is stored persistently.
+
+Review the project and verify that important information is not stored only in:
+
+* browser memory
+* localStorage only
+* temporary frontend state
+* Replit Agent conversation context
+
+Any important application data must be stored in the database or project files.
+
+---
+
+3. Fix the issue where changes made in one environment are not reflected elsewhere.
+
+Verify:
+
+* changes inside Replit are saved permanently
+* deployed application uses the latest code
+* database changes persist
+* different browsers/devices access the same updated data
+
+Do not create separate temporary states.
+
+---
+
+4. Investigate the "Something went wrong" error when deleting saved information.
+
+Find the root cause.
+
+Check:
+
+* frontend errors
+* API requests
+* database operations
+* missing permissions
+* invalid routes
+* failed migrations
+
+Fix the issue completely.
+
+The delete action must:
+
+* successfully remove the data
+* update the UI afterward
+* show proper success/error messages
+
+---
+
+5. Add a reliable development workflow.
+
+After every major modification:
+
+* update PROJECT_CONTEXT.md
+* ensure database migrations are applied
+* verify the running application uses the latest version
+* avoid storing critical information only in AI conversation memory
+
+---
+
+Important:
+
+Do not rewrite the application.
+
+Do not change existing functionality unless required to fix this issue.
+
+First analyze the current implementation, identify why persistence is failing, then apply the minimum required changes.
+
+At the end provide a report explaining:
+
+* root cause
+* files changed
+* database changes
+* how persistence now works
+* remaining issues if any
