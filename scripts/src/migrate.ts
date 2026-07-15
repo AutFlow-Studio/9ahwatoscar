@@ -180,6 +180,20 @@ async function migrate() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id          SERIAL PRIMARY KEY,
+        type        TEXT NOT NULL,
+        title       TEXT NOT NULL,
+        message     TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id   INTEGER,
+        href        TEXT,
+        is_read     BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
     // ── Manually-managed tables ───────────────────────────────────────────
 
     await client.query(`
