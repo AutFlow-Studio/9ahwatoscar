@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Search, Plus, Building2, Mail, Phone, ExternalLink, MoreVertical } from "lucide-react";
+import { Search, Plus, Building2, Mail, Phone, ExternalLink, MoreVertical, Users } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";

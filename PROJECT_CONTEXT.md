@@ -1,0 +1,182 @@
+# AutFlow Studio — Project Context
+
+> **Keep this file up to date.** After every significant change, update the relevant section and add an entry to [Change Log](#change-log).
+
+---
+
+## Purpose
+
+AutFlow Studio is a full-stack **agency operating system** for small-to-medium digital agencies. It centralises client management, project tracking, invoicing/payments, document storage, meeting scheduling, task management, and an activity feed in a single web application.
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 24 |
+| Language | TypeScript 5.9 (strict) |
+| Frontend | React 19 + Vite 7 + Tailwind CSS 4 |
+| Backend | Express 5 |
+| Database | PostgreSQL 16 + Drizzle ORM |
+| Auth | express-session + connect-pg-simple + bcryptjs |
+| Validation | Zod v4 + drizzle-zod |
+| Data fetching | TanStack Query (React Query v5) |
+| API codegen | Orval (OpenAPI → React Query hooks + Zod schemas) |
+| Build | esbuild (CJS bundle for API server) |
+| Package manager | pnpm workspaces |
+
+---
+
+## Repository Structure
+
+```
+/
+├── artifacts/
+│   ├── api-server/          # Express 5 API — port 8080
+│   └── autflow-studio/      # React + Vite frontend — port 22583
+├── lib/
+│   ├── db/src/schema/       # Drizzle table definitions (source of truth for DB shape)
+│   ├── api-spec/            # openapi.yaml (source of truth for API contracts)
+│   ├── api-client-react/    # Generated: React Query hooks
+│   └── api-zod/             # Generated: Zod request/response schemas
+└── scripts/
+    ├── src/migrate.ts       # Creates tables (users, agency_settings, sessions)
+    └── src/seed.ts          # Inserts demo data + default admin
+```
+
+---
+
+## Database Schema
+
+All tables are defined in `lib/db/src/schema/`. The following 12 tables exist:
+
+| Table | Purpose |
+|---|---|
+| `users` | Admin accounts (bcrypt passwords) |
+| `sessions` | Server-side session store (connect-pg-simple) |
+| `agency_settings` | Agency name, logo, contact info |
+| `clients` | Client companies |
+| `projects` | Projects linked to clients |
+| `deliverables` | Project deliverables/milestones |
+| `payments` | Invoices and payment records |
+| `documents` | File/link attachments per client |
+| `meetings` | Scheduled meetings |
+| `notes` | Internal notes per client |
+| `tasks` | Tasks (global or per-project) |
+| `activity` | Append-only activity feed |
+| `notifications` | In-app notification inbox |
+
+---
+
+## Authentication
+
+- Strategy: **server-side sessions** — no JWT anywhere.
+- Session cookie name: `autflow.sid` (HTTP-only, SameSite=Lax)
+- Session store: PostgreSQL via `connect-pg-simple` (`sessions` table)
+- Default admin: `admin@autflow.io` / `admin123`
+- All API routes except `/api/health` and `/api/auth/(login|logout|me)` require the `requireAuth` middleware.
+- Frontend must send `credentials: "include"` on every fetch (handled by `customFetch` in `lib/api-client-react/src/custom-fetch.ts`).
+
+---
+
+## API Design
+
+- All routes are mounted under `/api` in `artifacts/api-server/src/app.ts`.
+- Request/response shapes are defined in `lib/api-spec/openapi.yaml`.
+- After changing the OpenAPI spec, run codegen: `pnpm --filter @workspace/api-spec run codegen`
+- Global async error handler in `app.ts` catches all unhandled route errors and returns a structured JSON error response. Express 5 auto-forwards async errors.
+
+---
+
+## How to Run
+
+### Development
+
+```bash
+# 1. Install dependencies (once, or after adding packages)
+pnpm install
+
+# 2. On a fresh database — run once
+pnpm --filter @workspace/scripts run migrate
+pnpm --filter @workspace/scripts run seed
+
+# 3. Start both services via Replit workflow buttons, or:
+PORT=8080 pnpm --filter @workspace/api-server run dev
+PORT=22583 BASE_PATH=/ pnpm --filter @workspace/autflow-studio run dev
+```
+
+### Regenerate API types
+
+```bash
+pnpm --filter @workspace/api-spec run codegen
+```
+
+### Typecheck
+
+```bash
+pnpm run typecheck
+```
+
+---
+
+## Persistence Model
+
+All application data is persisted in **PostgreSQL**. Nothing important is stored only in browser memory or localStorage. The data flow is:
+
+```
+User action → React component → TanStack Query mutation
+  → customFetch (credentials: include) → Express route
+  → Drizzle ORM → PostgreSQL
+  → 204 / JSON response → React Query cache invalidation → UI re-render
+```
+
+Sessions are also stored in PostgreSQL (not memory), so they survive server restarts and are consistent across multiple clients/browsers.
+
+---
+
+## Notification System
+
+- Notifications are created server-side by helper `artifacts/api-server/src/lib/createNotification.ts`.
+- Always `void`-cast calls to this helper inside route handlers so errors don't propagate to the route response.
+- Notification-emitting routes: clients POST, projects POST + PATCH (status), payments POST + PATCH (status=paid), tasks POST + PATCH (status=done), documents POST.
+- Frontend polls unread count every 30 s via `useListNotifications({ refetchInterval: 30000 })`.
+
+---
+
+## Known Limitations
+
+| # | Issue | Location | Severity |
+|---|---|---|---|
+| 1 | GCS credentials not configured — document **uploads** to cloud storage fail silently | `artifacts/api-server/src/lib/objectStorage.ts` | Medium |
+| 2 | CSS color tokens in `index.css` are placeholder values — theming not fully applied | `artifacts/autflow-studio/src/index.css` | Low |
+| 3 | `drizzle-kit push` requires a TTY — use `executeSql` to apply schema changes non-interactively | — | Operational |
+
+---
+
+## Completed Fixes
+
+| Date | Description |
+|---|---|
+| 2026-07-15 | **"Something went wrong" on client delete** — `Users` icon from lucide-react was not imported in `clients/index.tsx`. The empty-state branch crashed React when the client list became empty (e.g. after deleting the last client). Fixed by adding `Users` to the lucide-react import. |
+| 2026-07-15 | **TypeScript error in `documents/index.tsx`** — `ListClientsResponseItem` was not exported from `@workspace/api-client-react`. Fixed by aliasing the existing `Client` type. |
+| 2026-07-15 | Project bootstrapped: `pnpm install`, `migrate`, `seed`, workflows started. |
+
+---
+
+## Development Workflow
+
+After every meaningful change:
+
+1. If the DB schema changed → run `pnpm --filter @workspace/scripts run migrate` (non-interactively).
+2. If `openapi.yaml` changed → run `pnpm --filter @workspace/api-spec run codegen`.
+3. Restart the affected workflow(s) and confirm logs are clean.
+4. Update this file — specifically the **Completed Fixes** and **Known Limitations** tables.
+
+---
+
+## Change Log
+
+| Date | Change |
+|---|---|
+| 2026-07-15 | Initial PROJECT_CONTEXT.md created; delete crash bug fixed; type alias fix applied. |

@@ -7,7 +7,7 @@ import {
   useListClients,
   getListDocumentsQueryKey,
   getListAllDocumentsQueryKey,
-  type ListClientsResponseItem,
+  type Client as ListClientsResponseItem,
 } from "@workspace/api-client-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
