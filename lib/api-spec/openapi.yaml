@@ -1,0 +1,1977 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Agency Owner Operating System API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: notifications
+    description: In-app notification management
+  - name: dashboard
+    description: Dashboard summary and stats
+  - name: clients
+    description: Client management
+  - name: projects
+    description: Project management
+  - name: deliverables
+    description: Deliverable tracking
+  - name: payments
+    description: Payment and invoice tracking
+  - name: documents
+    description: Document and link management
+  - name: notes
+    description: Private owner notes
+  - name: meetings
+    description: Meeting records
+  - name: tasks
+    description: Internal task management
+  - name: activity
+    description: Activity feed
+  - name: timeline
+    description: Client timeline events
+  - name: calendar
+    description: Calendar events aggregation
+  - name: search
+    description: Global search
+  - name: reports
+    description: Summary reports
+  - name: admin
+    description: Administrative operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Dashboard ────────────────────────────────────────────────────────────
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  # ─── Clients ─────────────────────────────────────────────────────────────
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientUpdate"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Projects ────────────────────────────────────────────────────────────
+  /projects:
+    get:
+      operationId: listProjects
+      tags: [projects]
+      summary: List projects
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      operationId: createProject
+      tags: [projects]
+      summary: Create a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      tags: [projects]
+      summary: Get a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdate"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+    delete:
+      operationId: deleteProject
+      tags: [projects]
+      summary: Delete a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Deliverables ─────────────────────────────────────────────────────────
+  /projects/{projectId}/deliverables:
+    get:
+      operationId: listDeliverables
+      tags: [deliverables]
+      summary: List deliverables for a project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of deliverables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deliverable"
+    post:
+      operationId: createDeliverable
+      tags: [deliverables]
+      summary: Create a deliverable
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliverableInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverable"
+
+  /deliverables/{id}:
+    patch:
+      operationId: updateDeliverable
+      tags: [deliverables]
+      summary: Update a deliverable
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliverableUpdate"
+      responses:
+        "200":
+          description: Updated deliverable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverable"
+    delete:
+      operationId: deleteDeliverable
+      tags: [deliverables]
+      summary: Delete a deliverable
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Payments ────────────────────────────────────────────────────────────
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Create a payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePayment
+      tags: [payments]
+      summary: Update a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentUpdate"
+      responses:
+        "200":
+          description: Updated payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      summary: Delete a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Documents ───────────────────────────────────────────────────────────
+  /documents:
+    get:
+      operationId: listAllDocuments
+      tags: [documents]
+      summary: List documents across all clients
+      responses:
+        "200":
+          description: List of documents with client name attached
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentWithClient"
+
+  /clients/{clientId}/documents:
+    get:
+      operationId: listDocuments
+      tags: [documents]
+      summary: List documents for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+    post:
+      operationId: createDocument
+      tags: [documents]
+      summary: Create a document/link for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /documents/{id}:
+    patch:
+      operationId: updateDocument
+      tags: [documents]
+      summary: Update a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdate"
+      responses:
+        "200":
+          description: Updated document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      summary: Delete a document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Notes ───────────────────────────────────────────────────────────────
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List notes
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+    post:
+      operationId: createNote
+      tags: [notes]
+      summary: Create a note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateNote
+      tags: [notes]
+      summary: Update a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+      responses:
+        "200":
+          description: Updated note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+    delete:
+      operationId: deleteNote
+      tags: [notes]
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Meetings ────────────────────────────────────────────────────────────
+  /meetings:
+    get:
+      operationId: listMeetings
+      tags: [meetings]
+      summary: List meetings
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of meetings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+    post:
+      operationId: createMeeting
+      tags: [meetings]
+      summary: Create a meeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+
+  /meetings/{id}:
+    get:
+      operationId: getMeeting
+      tags: [meetings]
+      summary: Get a meeting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateMeeting
+      tags: [meetings]
+      summary: Update a meeting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingUpdate"
+      responses:
+        "200":
+          description: Updated meeting
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+    delete:
+      operationId: deleteMeeting
+      tags: [meetings]
+      summary: Delete a meeting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Tasks ───────────────────────────────────────────────────────────────
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List tasks
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Timeline ────────────────────────────────────────────────────────────
+  /clients/{clientId}/timeline:
+    get:
+      operationId: getClientTimeline
+      tags: [timeline]
+      summary: Get timeline events for a client
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEvent"
+
+  # ─── Activity ─────────────────────────────────────────────────────────────
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [activity]
+      summary: Get recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ─── Calendar ────────────────────────────────────────────────────────────
+  /calendar:
+    get:
+      operationId: getCalendar
+      tags: [calendar]
+      summary: Get aggregated calendar events
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Calendar events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarEvent"
+
+  # ─── Search ──────────────────────────────────────────────────────────────
+  /search:
+    get:
+      operationId: globalSearch
+      tags: [search]
+      summary: Global search across all entities
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  # ─── Reports ─────────────────────────────────────────────────────────────
+  /reports/overview:
+    get:
+      operationId: getReportsOverview
+      tags: [reports]
+      summary: Get business overview report
+      responses:
+        "200":
+          description: Overview report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportsOverview"
+
+  /reports/revenue:
+    get:
+      operationId: getRevenueReport
+      tags: [reports]
+      summary: Get revenue breakdown report
+      responses:
+        "200":
+          description: Revenue report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevenueReport"
+
+  # ─── Notifications ───────────────────────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications with unread count
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+
+  /notifications/unread-count:
+    get:
+      operationId: getNotificationUnreadCount
+      tags: [notifications]
+      summary: Get unread notification count
+      responses:
+        "200":
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationUnreadCount"
+
+  /notifications/mark-all-read:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Number of notifications updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationMarkAllReadResult"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "404":
+          description: Not found
+
+  /notifications/{id}:
+    delete:
+      operationId: deleteNotification
+      tags: [notifications]
+      summary: Delete a notification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ─── Admin ───────────────────────────────────────────────────────────────
+  /admin/reset:
+    post:
+      operationId: resetDemoData
+      tags: [admin]
+      summary: Permanently delete all data across every table (irreversible demo reset)
+      responses:
+        "200":
+          description: Reset complete
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success]
+                properties:
+                  success:
+                    type: boolean
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    # ─── Dashboard ──────────────────────────────────────────────────────────
+    DashboardStats:
+      type: object
+      required:
+        - totalClients
+        - activeClients
+        - projectsInProgress
+        - completedProjects
+        - delayedProjects
+        - upcomingDeadlines
+        - invoicesAwaitingPayment
+        - totalRevenue
+        - outstandingPayments
+        - projectsAtRisk
+        - recentActivity
+        - upcomingMeetings
+        - recentNotes
+        - projectsNeedingAttention
+      properties:
+        totalClients:
+          type: integer
+        activeClients:
+          type: integer
+        projectsInProgress:
+          type: integer
+        completedProjects:
+          type: integer
+        delayedProjects:
+          type: integer
+        upcomingDeadlines:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+        invoicesAwaitingPayment:
+          type: integer
+        totalRevenue:
+          type: number
+        outstandingPayments:
+          type: number
+        projectsAtRisk:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+        upcomingMeetings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Meeting"
+        recentNotes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Note"
+        projectsNeedingAttention:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+
+    # ─── Client ─────────────────────────────────────────────────────────────
+    Client:
+      type: object
+      required: [id, companyName, status, createdAt]
+      properties:
+        id:
+          type: integer
+        companyName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        industry:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        primaryContact:
+          type: ["string", "null"]
+        secondaryContact:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        timezone:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, inactive, prospect, churned]
+        startDate:
+          type: ["string", "null"]
+        contractValue:
+          type: ["number", "null"]
+        monthlyRetainer:
+          type: ["number", "null"]
+        paymentMethod:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ClientDetail:
+      allOf:
+        - $ref: "#/components/schemas/Client"
+        - type: object
+          properties:
+            projects:
+              type: array
+              items:
+                $ref: "#/components/schemas/Project"
+            recentActivity:
+              type: array
+              items:
+                $ref: "#/components/schemas/ActivityItem"
+            openPayments:
+              type: array
+              items:
+                $ref: "#/components/schemas/Payment"
+            totalRevenue:
+              type: number
+            outstandingBalance:
+              type: number
+
+    ClientInput:
+      type: object
+      required: [companyName]
+      properties:
+        companyName:
+          type: string
+        logoUrl:
+          type: string
+        industry:
+          type: string
+        website:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        primaryContact:
+          type: string
+        secondaryContact:
+          type: string
+        address:
+          type: string
+        timezone:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, prospect, churned]
+        startDate:
+          type: string
+        contractValue:
+          type: number
+        monthlyRetainer:
+          type: number
+        paymentMethod:
+          type: string
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    ClientUpdate:
+      type: object
+      properties:
+        companyName:
+          type: string
+        logoUrl:
+          type: string
+        industry:
+          type: string
+        website:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        primaryContact:
+          type: string
+        secondaryContact:
+          type: string
+        address:
+          type: string
+        timezone:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, prospect, churned]
+        startDate:
+          type: string
+        contractValue:
+          type: number
+        monthlyRetainer:
+          type: number
+        paymentMethod:
+          type: string
+        notes:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    # ─── Project ─────────────────────────────────────────────────────────────
+    Project:
+      type: object
+      required: [id, clientId, name, status, priority, progress, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        name:
+          type: string
+        status:
+          type: string
+          enum: [planning, waiting, design, development, testing, review, delivered, paused, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        startDate:
+          type: ["string", "null"]
+        deadline:
+          type: ["string", "null"]
+        estimatedBudget:
+          type: ["number", "null"]
+        actualCost:
+          type: ["number", "null"]
+        revenue:
+          type: ["number", "null"]
+        profit:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        ownerNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ProjectDetail:
+      allOf:
+        - $ref: "#/components/schemas/Project"
+        - type: object
+          properties:
+            deliverables:
+              type: array
+              items:
+                $ref: "#/components/schemas/Deliverable"
+            documents:
+              type: array
+              items:
+                $ref: "#/components/schemas/Document"
+            notes:
+              type: array
+              items:
+                $ref: "#/components/schemas/Note"
+
+    ProjectInput:
+      type: object
+      required: [clientId, name, status, priority]
+      properties:
+        clientId:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+          enum: [planning, waiting, design, development, testing, review, delivered, paused, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        startDate:
+          type: string
+        deadline:
+          type: string
+        estimatedBudget:
+          type: number
+        actualCost:
+          type: number
+        revenue:
+          type: number
+        description:
+          type: string
+        ownerNotes:
+          type: string
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [planning, waiting, design, development, testing, review, delivered, paused, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        startDate:
+          type: string
+        deadline:
+          type: string
+        estimatedBudget:
+          type: number
+        actualCost:
+          type: number
+        revenue:
+          type: number
+        description:
+          type: string
+        ownerNotes:
+          type: string
+
+    # ─── Deliverable ─────────────────────────────────────────────────────────
+    Deliverable:
+      type: object
+      required: [id, projectId, title, status, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, review, done]
+        deadline:
+          type: ["string", "null"]
+        assignedTo:
+          type: ["string", "null"]
+        completionDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    DeliverableInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, review, done]
+        deadline:
+          type: string
+        assignedTo:
+          type: string
+        completionDate:
+          type: string
+        notes:
+          type: string
+
+    DeliverableUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, review, done]
+        deadline:
+          type: string
+        assignedTo:
+          type: string
+        completionDate:
+          type: string
+        notes:
+          type: string
+
+    # ─── Payment ─────────────────────────────────────────────────────────────
+    Payment:
+      type: object
+      required: [id, clientId, invoiceNumber, amount, status, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        projectId:
+          type: ["integer", "null"]
+        invoiceNumber:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        dueDate:
+          type: ["string", "null"]
+        paidDate:
+          type: ["string", "null"]
+        paymentMethod:
+          type: ["string", "null"]
+        remainingBalance:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    PaymentInput:
+      type: object
+      required: [clientId, invoiceNumber, amount, status]
+      properties:
+        clientId:
+          type: integer
+        projectId:
+          type: integer
+        invoiceNumber:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        dueDate:
+          type: string
+        paidDate:
+          type: string
+        paymentMethod:
+          type: string
+        remainingBalance:
+          type: number
+        notes:
+          type: string
+
+    PaymentUpdate:
+      type: object
+      properties:
+        invoiceNumber:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [paid, pending, overdue, cancelled]
+        dueDate:
+          type: string
+        paidDate:
+          type: string
+        paymentMethod:
+          type: string
+        remainingBalance:
+          type: number
+        notes:
+          type: string
+
+    # ─── Document ────────────────────────────────────────────────────────────
+    Document:
+      type: object
+      required: [id, clientId, title, type, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        projectId:
+          type: ["integer", "null"]
+        title:
+          type: string
+        type:
+          type: string
+          enum: [contract, invoice, proposal, design, brand_assets, link, google_drive, github, figma, other]
+        url:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    DocumentWithClient:
+      allOf:
+        - $ref: "#/components/schemas/Document"
+        - type: object
+          required: [clientName]
+          properties:
+            clientName:
+              type: string
+
+    DocumentInput:
+      type: object
+      required: [title, type]
+      properties:
+        projectId:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [contract, invoice, proposal, design, brand_assets, link, google_drive, github, figma, other]
+        url:
+          type: string
+        notes:
+          type: string
+
+    DocumentUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [contract, invoice, proposal, design, brand_assets, link, google_drive, github, figma, other]
+        url:
+          type: string
+        notes:
+          type: string
+
+    # ─── Note ────────────────────────────────────────────────────────────────
+    Note:
+      type: object
+      required: [id, content, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: ["integer", "null"]
+        projectId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        content:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    NoteInput:
+      type: object
+      required: [content]
+      properties:
+        clientId:
+          type: integer
+        projectId:
+          type: integer
+        content:
+          type: string
+
+    NoteUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+
+    # ─── Meeting ─────────────────────────────────────────────────────────────
+    Meeting:
+      type: object
+      required: [id, clientId, date, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        date:
+          type: string
+        summary:
+          type: ["string", "null"]
+        actionItems:
+          type: ["string", "null"]
+        nextMeeting:
+          type: ["string", "null"]
+        attachments:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    MeetingInput:
+      type: object
+      required: [clientId, date]
+      properties:
+        clientId:
+          type: integer
+        date:
+          type: string
+        summary:
+          type: string
+        actionItems:
+          type: string
+        nextMeeting:
+          type: string
+        attachments:
+          type: string
+
+    MeetingUpdate:
+      type: object
+      properties:
+        date:
+          type: string
+        summary:
+          type: string
+        actionItems:
+          type: string
+        nextMeeting:
+          type: string
+        attachments:
+          type: string
+
+    # ─── Task ────────────────────────────────────────────────────────────────
+    Task:
+      type: object
+      required: [id, title, priority, status, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        deadline:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        clientId:
+          type: ["integer", "null"]
+        projectId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        projectName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    TaskInput:
+      type: object
+      required: [title, priority, status]
+      properties:
+        title:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        deadline:
+          type: string
+        notes:
+          type: string
+        clientId:
+          type: integer
+        projectId:
+          type: integer
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        deadline:
+          type: string
+        notes:
+          type: string
+        clientId:
+          type: integer
+        projectId:
+          type: integer
+
+    # ─── Timeline ────────────────────────────────────────────────────────────
+    TimelineEvent:
+      type: object
+      required: [id, clientId, type, description, occurredAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        occurredAt:
+          type: string
+
+    # ─── Activity ────────────────────────────────────────────────────────────
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        description:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    # ─── Calendar ────────────────────────────────────────────────────────────
+    CalendarEvent:
+      type: object
+      required: [id, type, title, date]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [deadline, meeting, payment_due, contract_expiry, project_launch]
+        title:
+          type: string
+        date:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        entityId:
+          type: ["integer", "null"]
+
+    # ─── Search ──────────────────────────────────────────────────────────────
+    SearchResult:
+      type: object
+      required: [id, type, title, subtitle]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [client, project, payment, note, meeting, document, task]
+        title:
+          type: string
+        subtitle:
+          type: ["string", "null"]
+        url:
+          type: ["string", "null"]
+
+    SearchResults:
+      type: object
+      required: [results, total]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+        total:
+          type: integer
+
+    # ─── Reports ─────────────────────────────────────────────────────────────
+    ReportsOverview:
+      type: object
+      required:
+        - totalClients
+        - activeClients
+        - totalProjects
+        - projectsByStatus
+        - totalRevenue
+        - outstandingPayments
+        - overduePayments
+        - totalPaid
+      properties:
+        totalClients:
+          type: integer
+        activeClients:
+          type: integer
+        totalProjects:
+          type: integer
+        projectsByStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        totalRevenue:
+          type: number
+        outstandingPayments:
+          type: number
+        overduePayments:
+          type: number
+        totalPaid:
+          type: number
+
+    RevenueReport:
+      type: object
+      required: [totalRevenue, totalOutstanding, totalOverdue, byClient, byMonth]
+      properties:
+        totalRevenue:
+          type: number
+        totalOutstanding:
+          type: number
+        totalOverdue:
+          type: number
+        byClient:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientRevenue"
+        byMonth:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyRevenue"
+
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+
+    ClientRevenue:
+      type: object
+      required: [clientId, clientName, revenue, outstanding]
+      properties:
+        clientId:
+          type: integer
+        clientName:
+          type: string
+        revenue:
+          type: number
+        outstanding:
+          type: number
+
+    MonthlyRevenue:
+      type: object
+      required: [month, monthLabel, revenue, collected]
+      properties:
+        month:
+          type: string
+        monthLabel:
+          type: string
+        revenue:
+          type: number
+        collected:
+          type: number
+
+    # ─── Notifications ───────────────────────────────────────────────────────
+    Notification:
+      type: object
+      required: [id, type, title, message, entityType, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        href:
+          type: ["string", "null"]
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+
+    NotificationList:
+      type: object
+      required: [notifications, unreadCount]
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer
+
+    NotificationUnreadCount:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+
+    NotificationMarkAllReadResult:
+      type: object
+      required: [updated]
+      properties:
+        updated:
+          type: integer

@@ -1,0 +1,182 @@
+[7/12/2026 8:19 PM] هُود: ROLE
+You are the Lead Software Architect and Senior Full-Stack Engineer responsible for this project.
+Assume ownership of the codebase.
+Your objective is not to rebuild the application from scratch.
+Instead, professionally refactor and upgrade the existing project while preserving all current functionality, UI, database relationships, business logic, and user experience.
+Treat this as production software that will be sold to paying marketing agencies.
+Do not remove existing features unless absolutely necessary.
+PROJECT CONTEXT
+This application is a complete Agency Management System (AutFlow Studio).
+It is an MVP that is already fully functional.
+It includes clients, projects, tasks, payments, reports, meetings, documents, settings, dashboards, and other agency management features.
+The architecture already exists.
+Your job is to improve it to production quality.
+IMPORTANT RULES
+Before modifying anything:
+Analyze the entire codebase.
+Understand the existing architecture.
+Identify how every feature currently works.
+Preserve existing functionality.
+Only refactor where necessary.
+Avoid breaking APIs or frontend behavior.
+Keep backward compatibility whenever possible.
+Think like a senior engineer performing a production upgrade.
+TASK 1 — Production Authentication
+Implement a complete production-ready authentication system.
+Use server-side sessions, not JWT.
+Implement:
+express-session
+connect-pg-simple
+PostgreSQL session storage
+bcrypt password hashing
+Secure HTTP-only cookies
+Session expiration
+Logout
+Login
+Current user endpoint
+Password validation
+Session persistence
+Authentication middleware
+Protect every private API.
+Only public endpoints should remain public.
+Create a complete Users system.
+Database should include:
+id
+name
+email
+password_hash
+role
+created_at
+last_login_at
+Roles:
+Owner
+Team Member
+Owner has full access.
+Team Member cannot perform destructive administrative operations.
+Restrict every admin endpoint appropriately.
+TASK 2 — Replace Browser Settings Storage
+Currently many settings are stored only inside the browser.
+This is unacceptable for production.
+Move all persistent settings into PostgreSQL.
+Create a proper Agency Profile model.
+Persist data such as:
+Agency name
+Logo
+Website
+Support email
+Company branding
+Notification settings
+User preferences
+The only acceptable client-side preference is UI theme (dark/light mode).
+Everything else must be stored server-side.
+Create migration logic so existing localStorage data is automatically imported once and then no longer used.
+TASK 3 — Professional Invoicing System
+The current invoice implementation is not production-ready.
+Replace it with a real invoicing system.
+Requirements:
+Professional PDF invoice generation
+Agency branding
+Logo
+Invoice number
+Issue date
+Due date
+Client information
+Agency information
+Invoice line items
+Quantity
+Unit price
+Total
+Taxes (optional)
+Notes
+Payment terms
+Invoice status
+Implement a professional invoice lifecycle:
+Draft
+↓
+Sent
+↓
+Paid
+↓
+Overdue
+↓
+Cancelled
+Replace every TXT download with real PDF generation.
+Use a robust and production-ready implementation.
+TASK 4 — Payment Processing
+Implement payment processing.
+Preferred implementation:
+Stripe Payment Links.
+Requirements:
+Pay Now button
+Stripe Checkout
+Secure payment flow
+Stripe Webhooks
+Automatically update invoice status to Paid
+Handle failed payments
+Handle cancelled payments
+Keep architecture modular for future payment providers.
+Do not implement unnecessary complexity.
+Keep the implementation clean and scalable.
+TASK 5 — Error Handling
+Upgrade the entire backend to production-grade error handling.
+Implement:
+async handler wrapper
+global Express error middleware
+proper HTTP status codes
+centralized error responses
+input validation
+request validation
+graceful handling of database failures
+graceful handling of unexpected exceptions
+Never allow the application to crash because of an unhandled exception.
+Implement process-level protection.
+Add proper logging.
+If appropriate, integrate Sentry for production error monitoring.
+On the frontend:
+React Error Boundaries
+Proper loading states
+[7/12/2026 8:19 PM] هُود: Proper failure states
+Friendly user messages
+TASK 6 — Security Review
+Review the complete project for security vulnerabilities.
+Fix every issue you discover, including but not limited to:
+Authentication vulnerabilities
+Authorization issues
+Missing validation
+Missing sanitization
+SQL injection risks
+XSS risks
+CSRF protection
+Session security
+Cookie security
+Environment variable usage
+Sensitive endpoint protection
+Apply production best practices.
+TASK 7 — Preserve Existing Functionality
+While implementing all improvements:
+Do NOT remove existing features.
+Do NOT redesign the UI unnecessarily.
+Do NOT change existing workflows unless required.
+Keep the current UX familiar.
+Preserve all existing business logic.
+The application should feel identical to users—only significantly more secure, reliable, and production-ready.
+TASK 8 — Final Verification
+Before considering the work complete:
+Verify every page.
+Verify every API endpoint.
+Verify authentication.
+Verify invoices.
+Verify payments.
+Verify settings persistence.
+Verify database migrations.
+Verify reports.
+Verify dashboards.
+Verify projects.
+Verify tasks.
+Verify clients.
+Fix every bug introduced during the upgrade.
+FINAL DELIVERABLE
+Do not stop after implementing the features.
+Perform a complete quality assurance review.
+Identify and fix any remaining bugs, inconsistencies, architectural issues, performance bottlenecks, security vulnerabilities, database issues, or UX regressions.
+The final result must be a stable, secure, production-ready Agency Management System that can confidently be sold to real clients without compromising reliability or security.

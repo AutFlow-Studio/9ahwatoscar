@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "AutFlow Studio"
+version = "1.0.0"
+id = "artifacts/autflow-studio"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22583
+
+[services.development]
+run = "pnpm --filter @workspace/autflow-studio run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/autflow-studio", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/autflow-studio/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22583"
+BASE_PATH = "/"

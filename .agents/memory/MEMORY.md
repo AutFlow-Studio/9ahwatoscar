@@ -1,0 +1,1 @@
+- [AutFlow Studio setup](autflow-studio-setup.md) — full stack agency OS; key file paths, bugs fixed, and bootstrap decisions worth remembering across sessions.
