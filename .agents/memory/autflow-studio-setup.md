@@ -7,7 +7,7 @@ description: Full-stack agency OS — key architectural decisions, bug patterns,
 - Dev login credentials: `admin@autflow.io` / `admin123` (seed only — production uses a real user account)
 - Production user: `abderrahmenhud@gmail.com` (owner role; password was changed by user on 2026-07-15)
 - Production URL: `https://9-ahwatoscar--wahom1.replit.app`
-- DB tables (13): clients, projects, deliverables, payments, documents, meetings, notes, meetings, tasks, activity, users, sessions, agency_settings, notifications
+- DB tables (13): clients, projects, deliverables, payments, documents, meetings, notes, tasks, activity, users, sessions, agency_settings, notifications
 - Codegen command: `pnpm --filter @workspace/api-spec run codegen` (runs orval + typecheck:libs)
 - Fresh-env setup: `pnpm install` → `pnpm --filter @workspace/scripts run migrate` → `pnpm --filter @workspace/scripts run seed`
 
@@ -34,6 +34,19 @@ description: Full-stack agency OS — key architectural decisions, bug patterns,
 - CORS: `origin: true` (reflects all origins) with `credentials: true` ✅
 - Both artifacts served from same domain — same-origin, cookies sent automatically ✅
 
+## Object Storage (App Storage) — document uploads
+- Bucket provisioned 2026-07-15 via `setupObjectStorage()` in CodeExecution sandbox
+- Env vars set (shared dev + prod): `DEFAULT_OBJECT_STORAGE_BUCKET_ID`, `PRIVATE_OBJECT_DIR`, `PUBLIC_OBJECT_SEARCH_PATHS`
+- Architecture: two-step presigned URL flow — browser PUTs file directly to GCS, API server never touches file bytes
+- `PRIVATE_OBJECT_DIR` format: `/<bucket-id>/objects` — parsed by `parseObjectPath()` in `objectStorage.ts`
+- Upload path stored in DB as `/objects/uploads/<uuid>` (the `url` column of `documents` table)
+- Serving: `GET /api/storage/objects/<path>` — streams from GCS, enforces session auth
+- File delete: `DELETE /api/documents/:id` removes DB row then fire-and-forgets GCS object deletion
+- Allowed MIME types enforced on backend (415 on violation): PDF, DOCX, DOC, XLSX, XLS, PNG, JPG, WebP, GIF
+- Size limit: 50 MB enforced on both frontend and backend (413 on violation)
+- Do NOT modify GCS client setup in `objectStorage.ts` (Replit sidecar auth, auto-configured)
+- `normalizeObjectEntityPath` converts GCS signed URL (`https://storage.googleapis.com/...`) → `/objects/...` path for DB storage
+
 ## Notification system (completed)
 - `lib/db/src/schema/notifications.ts` — notificationsTable with: id, type, title, message, entityType, entityId (nullable), href (nullable), isRead (bool), createdAt
 - `artifacts/api-server/src/lib/createNotification.ts` — fire-and-forget helper; always `void`-cast the call so route errors don't propagate
@@ -52,8 +65,6 @@ description: Full-stack agency OS — key architectural decisions, bug patterns,
 - Same-origin requests (both dev via Vite proxy and prod via same-domain routing) work without this, but it makes intent explicit and guards against routing changes
 - Raw `fetch()` calls in `auth-provider.tsx` already had `credentials: "include"` explicitly
 
-## Known remaining issues (not introduced by above work)
-- `artifacts/api-server/src/lib/objectStorage.ts` — `signed_url` property type (TS error)
+## Known remaining issues (pre-existing, not introduced by fixes)
 - `index.css` color tokens all set to `red` (placeholder, deferred task)
-- GCS storage credentials not configured — document uploads fail silently
 - `POST /api/admin/reset` route exists — resets all production data (used by real user on 2026-07-15 to clear demo data)

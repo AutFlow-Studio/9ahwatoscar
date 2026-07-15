@@ -170,9 +170,8 @@ Replit provides **two separate managed PostgreSQL databases** — one per enviro
 
 | # | Issue | Location | Severity |
 |---|---|---|---|
-| 1 | GCS credentials not configured — document **uploads** to cloud storage fail silently | `artifacts/api-server/src/lib/objectStorage.ts` | Medium |
-| 2 | CSS color tokens in `index.css` are placeholder values — theming not fully applied | `artifacts/autflow-studio/src/index.css` | Low |
-| 3 | `drizzle-kit push` requires a TTY — use `executeSql` to apply schema changes non-interactively | — | Operational |
+| 1 | CSS color tokens in `index.css` are placeholder values — theming not fully applied | `artifacts/autflow-studio/src/index.css` | Low |
+| 2 | `drizzle-kit push` requires a TTY — use `executeSql` to apply schema changes non-interactively | — | Operational |
 
 ---
 
@@ -183,8 +182,10 @@ Replit provides **two separate managed PostgreSQL databases** — one per enviro
 | 2026-07-15 | **"Something went wrong" on client delete** — `Users` icon from lucide-react was not imported in `clients/index.tsx`. The empty-state branch crashed React when the client list became empty (e.g. after deleting the last client). Fixed by adding `Users` to the lucide-react import. |
 | 2026-07-15 | **TypeScript error in `documents/index.tsx`** — `ListClientsResponseItem` was not exported from `@workspace/api-client-react`. Fixed by aliasing the existing `Client` type. |
 | 2026-07-15 | Project bootstrapped: `pnpm install`, `migrate`, `seed`, workflows started. |
+| 2026-07-15 | **Document uploads fully operational** — provisioned GCS App Storage bucket (`setupObjectStorage()`); env vars `PRIVATE_OBJECT_DIR`, `PUBLIC_OBJECT_SEARCH_PATHS`, `DEFAULT_OBJECT_STORAGE_BUCKET_ID` set. Added backend content-type allowlist (415 on blocked types), server-side 50 MB size enforcement (413), hardened `Content-Disposition` filename sanitisation, improved GCS error surfacing in frontend (`uploadToGcs` reads XML error body), added missing size check to `ReplaceFileDialog`. E2E verified: upload → DB persist → download with content integrity → delete → GCS object confirmed gone (404). |
 | 2026-07-15 | **`notifications` table missing from `migrate.ts`** — existed in Drizzle schema but was never added to the migration script. Table was created in dev DB and added to `migrate.ts` and `post-merge.sh` so all future environments get it. |
 | 2026-07-15 | **`customFetch` missing `credentials: "include"`** — all React Query data hooks (create/update/delete/list) went through `lib/api-client-react/src/custom-fetch.ts` without explicit credentials. Same-origin requests work without it, but added `credentials: "include"` as the default for consistency with the raw `fetch()` calls in `auth-provider.tsx` and to guard against any future routing changes. |
+| 2026-07-15 | **Document uploads** — provisioned GCS App Storage bucket; added backend content-type allowlist (415), file-size enforcement (413, max 50 MB), improved GCS error surfacing in frontend; added size check to ReplaceFileDialog; full e2e test passed (upload → persist → download → delete → GCS cleanup). |
 
 ---
 

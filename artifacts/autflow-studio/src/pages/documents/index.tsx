@@ -108,12 +108,20 @@ async function requestUploadUrl(file: File): Promise<{ uploadURL: string; object
 }
 
 async function uploadToGcs(uploadURL: string, file: File): Promise<void> {
+  // Use a normalized content-type; some OS/browser combos leave file.type empty
+  const contentType = file.type || "application/octet-stream";
   const res = await fetch(uploadURL, {
     method: "PUT",
-    headers: { "Content-Type": file.type },
+    headers: { "Content-Type": contentType },
     body: file,
   });
-  if (!res.ok) throw new Error("Upload to storage failed");
+  if (!res.ok) {
+    // GCS returns XML error bodies — grab the status for a useful message
+    const text = await res.text().catch(() => "");
+    const match = text.match(/<Message>(.+?)<\/Message>/);
+    const detail = match ? match[1] : `HTTP ${res.status}`;
+    throw new Error(`Upload to storage failed: ${detail}`);
+  }
 }
 
 async function uploadFile(
@@ -440,6 +448,10 @@ function ReplaceFileDialog({
 
   async function handleReplace() {
     if (!selectedFile) return;
+    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast({ title: "File too large", description: `Max file size is ${MAX_FILE_SIZE_MB} MB.`, variant: "destructive" });
+      return;
+    }
     setIsUploading(true);
     try {
       const objectPath = await uploadFile(selectedFile, setUploadProgress);
