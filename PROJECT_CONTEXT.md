@@ -133,6 +133,28 @@ User action → React component → TanStack Query mutation
 
 Sessions are also stored in PostgreSQL (not memory), so they survive server restarts and are consistent across multiple clients/browsers.
 
+## Dev vs Production Database Architecture
+
+Replit provides **two separate managed PostgreSQL databases** — one per environment. This is platform-enforced and cannot be changed; it mirrors how all major platforms (Vercel, Heroku, Netlify) work.
+
+| | Development (Preview) | Production (Deployed app) |
+|---|---|---|
+| **Database** | Separate dev DB | Separate production DB |
+| **URL** | `DATABASE_URL` injected by Replit | `DATABASE_URL` injected by Replit |
+| **Data** | Seed/test data (`admin@autflow.io`) | Real user data (`abderrahmenhud@gmail.com`) |
+| **Schema sync** | Updated via `post-merge.sh` → `migrate` | Synced when user clicks **Publish** (Replit diffs dev vs prod schema and applies it) |
+| **Data sync** | Not synced — intentional | Not synced — intentional (prevents test data from overwriting production) |
+
+**Schema changes flow:** Edit schema → `migrate` applies to dev DB → click Publish → Replit applies the SQL diff to production DB.
+
+**Production data is permanent:** Data written to the production app persists indefinitely across re-deployments. Re-publishing updates the code and schema but never wipes production rows.
+
+**Verified production state (2026-07-15):**
+- All 13 tables exist in the production DB ✅
+- Real owner account `abderrahmenhud@gmail.com` active ✅
+- Sessions, notifications, all entity tables present ✅
+- Health check `/api/healthz` → `{"status":"ok"}` ✅
+
 ---
 
 ## Notification System
@@ -161,6 +183,8 @@ Sessions are also stored in PostgreSQL (not memory), so they survive server rest
 | 2026-07-15 | **"Something went wrong" on client delete** — `Users` icon from lucide-react was not imported in `clients/index.tsx`. The empty-state branch crashed React when the client list became empty (e.g. after deleting the last client). Fixed by adding `Users` to the lucide-react import. |
 | 2026-07-15 | **TypeScript error in `documents/index.tsx`** — `ListClientsResponseItem` was not exported from `@workspace/api-client-react`. Fixed by aliasing the existing `Client` type. |
 | 2026-07-15 | Project bootstrapped: `pnpm install`, `migrate`, `seed`, workflows started. |
+| 2026-07-15 | **`notifications` table missing from `migrate.ts`** — existed in Drizzle schema but was never added to the migration script. Table was created in dev DB and added to `migrate.ts` and `post-merge.sh` so all future environments get it. |
+| 2026-07-15 | **`customFetch` missing `credentials: "include"`** — all React Query data hooks (create/update/delete/list) went through `lib/api-client-react/src/custom-fetch.ts` without explicit credentials. Same-origin requests work without it, but added `credentials: "include"` as the default for consistency with the raw `fetch()` calls in `auth-provider.tsx` and to guard against any future routing changes. |
 
 ---
 
